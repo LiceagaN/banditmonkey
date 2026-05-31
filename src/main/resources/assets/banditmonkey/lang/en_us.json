@@ -1,0 +1,13 @@
+{
+  "itemGroup.banditmonkey": "Example Mod Tab",
+  "block.banditmonkey.example_block": "Example Block",
+  "item.banditmonkey.example_item": "Example Item",
+
+  "banditmonkey.configuration.title": "Bandit Monkey Configs",
+  "banditmonkey.configuration.section.banditmonkey.common.toml": "Bandit Monkey Configs",
+  "banditmonkey.configuration.section.banditmonkey.common.toml.title": "Bandit Monkey Configs",
+  "banditmonkey.configuration.items": "Item List",
+  "banditmonkey.configuration.logDirtBlock": "Log Dirt Block",
+  "banditmonkey.configuration.magicNumberIntroduction": "Magic Number Text",
+  "banditmonkey.configuration.magicNumber": "Magic Number"
+}
