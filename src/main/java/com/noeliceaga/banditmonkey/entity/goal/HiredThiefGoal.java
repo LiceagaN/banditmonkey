@@ -107,27 +107,25 @@ public class HiredThiefGoal extends Goal {
     }
 
     private void stealFromVillager(Villager villager) {
-        MerchantOffers offers = villager.getOffers();
-        if (offers == null || offers.isEmpty()) {
-            deliver(new ItemStack(Items.EMERALD, 1 + monkey.getRandom().nextInt(3)), villager.getName().getString());
-            return;
-        }
-
+        // Try to match wish list items against villager trade results
         List<ItemStack> wishList = monkey.getWishListItems();
         if (!wishList.isEmpty()) {
-            for (ItemStack wish : wishList) {
-                if (wish.isEmpty()) continue;
-                for (MerchantOffer offer : offers) {
-                    if (offer.getResult().getItem() == wish.getItem()) {
-                        deliver(offer.getResult().copy(), villager.getName().getString());
-                        return;
+            MerchantOffers offers = villager.getOffers();
+            if (offers != null && !offers.isEmpty()) {
+                for (ItemStack wish : wishList) {
+                    if (wish.isEmpty()) continue;
+                    for (MerchantOffer offer : offers) {
+                        ItemStack result = offer.getResult();
+                        if (result != null && !result.isEmpty() && result.getItem() == wish.getItem()) {
+                            deliver(result.copy(), villager.getName().getString());
+                            return;
+                        }
                     }
                 }
             }
         }
-
-        MerchantOffer offer = offers.get(monkey.getRandom().nextInt(offers.size()));
-        deliver(offer.getResult().copy(), villager.getName().getString());
+        // Default: steal emeralds — the universal villager currency
+        deliver(new ItemStack(Items.EMERALD, 1 + monkey.getRandom().nextInt(3)), villager.getName().getString());
     }
 
     private void deliver(ItemStack stolen, String victimName) {
