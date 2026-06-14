@@ -8,8 +8,7 @@ import com.noeliceaga.banditmonkey.registry.MenuRegistry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -67,8 +66,10 @@ public class BanditMonkey {
             if (!(ctx.player() instanceof ServerPlayer serverPlayer)) return;
             ServerLevel level = serverPlayer.level();
 
-            Entity targetEntity = level.getEntity(payload.targetEntityId());
-            if (!(targetEntity instanceof LivingEntity livingTarget)) return;
+            Player targetPlayer = level.getServer() != null
+                    ? level.getServer().getPlayerList().getPlayer(payload.targetUUID())
+                    : null;
+            if (targetPlayer == null) return;
 
             List<BanditMonkeyEntity> monkeys = level.getEntitiesOfClass(
                     BanditMonkeyEntity.class,
@@ -76,15 +77,16 @@ public class BanditMonkey {
                     m -> m.isTame() && !m.isOrderedToSit() && m.isOwnedBy(serverPlayer));
 
             if (monkeys.isEmpty()) {
-                serverPlayer.sendSystemMessage(Component.translatable("message.banditmonkey.no_monkey_nearby"));
+                serverPlayer.displayClientMessage(
+                        Component.translatable("message.banditmonkey.no_monkey_nearby"), false);
                 return;
             }
 
             monkeys.sort(Comparator.comparingDouble(m -> m.distanceTo(serverPlayer)));
             BanditMonkeyEntity monkey = monkeys.get(0);
-            monkey.setStealTargetUUID(livingTarget.getUUID());
-            serverPlayer.sendSystemMessage(Component.translatable(
-                    "message.banditmonkey.target_set", livingTarget.getName()));
+            monkey.setStealTargetUUID(targetPlayer.getUUID());
+            serverPlayer.displayClientMessage(Component.translatable(
+                    "message.banditmonkey.target_set", targetPlayer.getName()), false);
         });
     }
 

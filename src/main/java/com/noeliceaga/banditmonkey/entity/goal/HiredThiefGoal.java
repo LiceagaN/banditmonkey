@@ -6,13 +6,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.trading.MerchantOffer;
-import net.minecraft.world.item.trading.MerchantOffers;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -21,7 +17,7 @@ import java.util.UUID;
 public class HiredThiefGoal extends Goal {
 
     private final BanditMonkeyEntity monkey;
-    private LivingEntity target;
+    private Player target;
     private int cooldown;
 
     public HiredThiefGoal(BanditMonkeyEntity monkey) {
@@ -37,11 +33,11 @@ public class HiredThiefGoal extends Goal {
         if (cooldown > 0) { cooldown--; return false; }
         if (!(monkey.level() instanceof ServerLevel serverLevel)) return false;
         Entity entity = serverLevel.getEntity(targetUUID);
-        if (!(entity instanceof LivingEntity living) || !living.isAlive()) {
+        if (!(entity instanceof Player player) || !player.isAlive()) {
             monkey.setStealTargetUUID(null);
             return false;
         }
-        target = living;
+        target = player;
         return true;
     }
 
@@ -58,21 +54,13 @@ public class HiredThiefGoal extends Goal {
 
     @Override
     public void tick() {
-        monkey.getLookControl().setLookAt(target, 30.0f, 30.0f);
+        monkey.getLookControl().setLookAt(target, 30f, 30f);
         monkey.getNavigation().moveTo(target, 1.3);
 
-        if (monkey.distanceTo(target) <= 2.2) {
-            performSteal();
+        if (monkey.distanceTo(target) <= 2.2f) {
+            stealFromPlayer(target);
             monkey.setStealTargetUUID(null);
             cooldown = 200;
-        }
-    }
-
-    private void performSteal() {
-        if (target instanceof Player player) {
-            stealFromPlayer(player);
-        } else if (target instanceof Villager villager) {
-            stealFromVillager(villager);
         }
     }
 
@@ -80,6 +68,7 @@ public class HiredThiefGoal extends Goal {
         List<ItemStack> wishList = monkey.getWishListItems();
         Inventory inv = player.getInventory();
 
+        // Try wish list first
         if (!wishList.isEmpty()) {
             for (ItemStack wish : wishList) {
                 if (wish.isEmpty()) continue;
@@ -94,6 +83,7 @@ public class HiredThiefGoal extends Goal {
             }
         }
 
+        // Fallback: steal any item
         for (int i = 0; i < 36; i++) {
             ItemStack slot = inv.getItem(i);
             if (!slot.isEmpty()) {
@@ -106,28 +96,6 @@ public class HiredThiefGoal extends Goal {
         notifyFailed(player.getName().getString());
     }
 
-    private void stealFromVillager(Villager villager) {
-        // Try to match wish list items against villager trade results
-        List<ItemStack> wishList = monkey.getWishListItems();
-        if (!wishList.isEmpty()) {
-            MerchantOffers offers = villager.getOffers();
-            if (offers != null && !offers.isEmpty()) {
-                for (ItemStack wish : wishList) {
-                    if (wish.isEmpty()) continue;
-                    for (MerchantOffer offer : offers) {
-                        ItemStack result = offer.getResult();
-                        if (result != null && !result.isEmpty() && result.getItem() == wish.getItem()) {
-                            deliver(result.copy(), villager.getName().getString());
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-        // Default: steal emeralds — the universal villager currency
-        deliver(new ItemStack(Items.EMERALD, 1 + monkey.getRandom().nextInt(3)), villager.getName().getString());
-    }
-
     private void deliver(ItemStack stolen, String victimName) {
         LivingEntity owner = monkey.getOwner();
         if (!(owner instanceof Player ownerPlayer)) return;
@@ -137,7 +105,8 @@ public class HiredThiefGoal extends Goal {
             }
         }
         ownerPlayer.displayClientMessage(Component.translatable(
-                "message.banditmonkey.hired_stolen", stolen.getDisplayName(), Component.literal(victimName)), false);
+                "message.banditmonkey.hired_stolen", stolen.getDisplayName(),
+                Component.literal(victimName)), false);
     }
 
     private void notifyFailed(String victimName) {
