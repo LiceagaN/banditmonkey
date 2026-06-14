@@ -1,7 +1,16 @@
 {
-  "itemGroup.banditmonkey": "Example Mod Tab",
-  "block.banditmonkey.example_block": "Example Block",
-  "item.banditmonkey.example_item": "Example Item",
+  "entity.banditmonkey.banditmonkey": "Bandit Monkey",
+
+  "message.banditmonkey.stolen": "A monkey stole your %s!",
+  "message.banditmonkey.hired_stolen": "Your monkey stole %s from %s!",
+  "message.banditmonkey.steal_failed": "Your monkey couldn't find anything to steal from %s.",
+  "message.banditmonkey.target_set": "Your monkey will steal from %s!",
+  "message.banditmonkey.no_monkey_nearby": "No monkey nearby is ready to steal.",
+  "message.banditmonkey.select_target": "Right-click any entity to set them as your monkey's steal target.",
+
+  "menu.banditmonkey.steal_order": "Steal Order",
+  "button.banditmonkey.set_target": "Set Target",
+  "label.banditmonkey.wish_list": "Wish List:",
 
   "banditmonkey.configuration.title": "Bandit Monkey Configs",
   "banditmonkey.configuration.section.banditmonkey.common.toml": "Bandit Monkey Configs",
